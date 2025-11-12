@@ -22,6 +22,9 @@
         --card-color: #161b26;
         --accent-color: #00c897;
         --danger-color: #ff4d6d;
+        --warning-color: #fbbf24;
+        --positive-color: #38bdf8;
+        --negative-color: #f87171;
         --text-color: #f1f5f9;
         --muted-text: #94a3b8;
         --table-border: rgba(255, 255, 255, 0.12);
@@ -66,6 +69,20 @@
         pointer-events: none;
       }
 
+      main::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: linear-gradient(160deg, rgba(15, 23, 42, 0), rgba(4, 21, 31, 0.6));
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      main.loading::after {
+        opacity: 1;
+      }
+
       header {
         margin-bottom: 2rem;
         text-align: center;
@@ -101,6 +118,8 @@
         font-size: 0.95rem;
         letter-spacing: 0.05em;
         cursor: pointer;
+        transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease,
+          border-color 0.2s ease;
         transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
       }
 
@@ -118,12 +137,62 @@
         box-shadow: none;
       }
 
+      button:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        box-shadow: none;
+        transform: none;
+        border-color: rgba(148, 163, 184, 0.35);
+      }
+
       .status {
         text-align: center;
         font-size: 0.95rem;
         color: var(--muted-text);
         min-height: 1.5rem;
         margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+
+      .status span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+      }
+
+      .status--info {
+        color: var(--muted-text);
+      }
+
+      .status--warning {
+        color: var(--warning-color);
+      }
+
+      .status--error {
+        color: var(--danger-color);
+      }
+
+      .status--success {
+        color: var(--accent-color);
+      }
+
+      .spinner {
+        width: 1rem;
+        height: 1rem;
+        border-radius: 999px;
+        border: 2px solid currentColor;
+        border-right-color: transparent;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
       }
 
       .table-wrapper {
@@ -149,6 +218,10 @@
         transform: translateY(0);
       }
 
+      table[aria-busy="true"] {
+        filter: saturate(0.7);
+      }
+
       thead {
         background: rgba(148, 163, 184, 0.12);
         text-transform: uppercase;
@@ -162,6 +235,27 @@
         text-align: left;
         border-bottom: 1px solid var(--table-border);
         white-space: nowrap;
+        vertical-align: middle;
+      }
+
+      tbody tr:last-child td,
+      tbody tr:last-child th {
+        border-bottom: none;
+      }
+
+      tbody tr {
+        transition: background 0.2s ease, transform 0.2s ease;
+      }
+
+      tbody tr:hover {
+        background: rgba(148, 163, 184, 0.08);
+        transform: translateY(-1px);
+      }
+
+      tbody tr:nth-child(even) {
+        background: rgba(148, 163, 184, 0.04);
+      }
+
       }
 
       tbody tr:last-child td {
@@ -191,6 +285,17 @@
         font-size: 0.85rem;
         background: rgba(148, 163, 184, 0.12);
         color: var(--muted-text);
+        transition: background 0.2s ease, color 0.2s ease;
+      }
+
+      .change-indicator--positive {
+        background: rgba(56, 189, 248, 0.15);
+        color: var(--positive-color);
+      }
+
+      .change-indicator--negative {
+        background: rgba(248, 113, 113, 0.18);
+        color: var(--negative-color);
       }
 
       .timestamp {
@@ -215,6 +320,60 @@
         }
       }
 
+      @media (max-width: 640px) {
+        table {
+          border-radius: 16px;
+        }
+
+        thead {
+          display: none;
+        }
+
+        tbody {
+          display: grid;
+          gap: 0.9rem;
+        }
+
+        tbody tr {
+          display: grid;
+          gap: 0.55rem;
+          background: rgba(15, 23, 42, 0.55);
+          border: 1px solid var(--table-border);
+          border-radius: 16px;
+          padding: 1rem;
+        }
+
+        tbody tr:hover {
+          transform: none;
+        }
+
+        tbody tr:nth-child(even) {
+          background: rgba(15, 23, 42, 0.55);
+        }
+
+        th,
+        td {
+          border: none;
+          padding: 0;
+          white-space: normal;
+        }
+
+        th::before,
+        td::before {
+          content: attr(data-label);
+          display: block;
+          font-size: 0.75rem;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          color: var(--muted-text);
+          margin-bottom: 0.35rem;
+        }
+
+        th {
+          font-size: 1.05rem;
+        }
+      }
+
       @media (prefers-reduced-motion: reduce) {
         *,
         *::before,
@@ -236,6 +395,9 @@
         <button id="refresh" type="button">Refresh Data</button>
         <button id="export" type="button">Export to CSV</button>
       </section>
+      <div id="status" class="status status--info" role="status" aria-live="polite"></div>
+      <div class="table-wrapper">
+        <table id="stocks-table" aria-describedby="status" aria-busy="false">
       <div id="status" class="status" role="status" aria-live="polite"></div>
       <div class="table-wrapper">
         <table id="stocks-table" aria-describedby="status">
@@ -260,6 +422,208 @@
       const timestampEl = document.getElementById("timestamp");
       const refreshBtn = document.getElementById("refresh");
       const exportBtn = document.getElementById("export");
+      const mainEl = document.querySelector("main");
+
+      const currencyFormatter = new Intl.NumberFormat(undefined, {
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+
+      let latestData = [];
+      let latestUpdatedAt = null;
+      let activeFetchController = null;
+      let statusClearHandle = null;
+
+      function setStatus(message, variant = "info", options = {}) {
+        const { spinner = false, autoClearMs } = options;
+
+        if (statusClearHandle) {
+          clearTimeout(statusClearHandle);
+          statusClearHandle = null;
+        }
+
+        statusEl.className = "status";
+        statusEl.removeAttribute("data-variant");
+        statusEl.textContent = "";
+
+        if (!message) {
+          return;
+        }
+
+        if (variant) {
+          statusEl.classList.add(`status--${variant}`);
+          statusEl.setAttribute("data-variant", variant);
+        }
+
+        const container = document.createElement("span");
+
+        if (spinner) {
+          container.appendChild(createSpinner());
+        }
+
+        const text = document.createElement("span");
+        text.textContent = message;
+        container.appendChild(text);
+        statusEl.appendChild(container);
+
+        if (autoClearMs) {
+          statusClearHandle = setTimeout(() => {
+            statusClearHandle = null;
+            setStatus(null);
+          }, autoClearMs);
+        }
+      }
+
+      function createSpinner() {
+        const spinner = document.createElement("span");
+        spinner.className = "spinner";
+        spinner.setAttribute("aria-hidden", "true");
+        return spinner;
+      }
+
+      function setButtonsDisabled(isDisabled) {
+        refreshBtn.disabled = isDisabled;
+        exportBtn.disabled = isDisabled || !latestData.length;
+      }
+
+      function setLoadingState(isLoading) {
+        if (isLoading) {
+          mainEl.classList.add("loading");
+          tableEl.setAttribute("aria-busy", "true");
+          if (!latestData.length) {
+            tableEl.classList.remove("visible");
+          }
+          return;
+        }
+
+        mainEl.classList.remove("loading");
+        tableEl.setAttribute("aria-busy", "false");
+        if (latestData.length) {
+          tableEl.classList.add("visible");
+        }
+      }
+
+      function clearTable() {
+        tbodyEl.replaceChildren();
+        tableEl.classList.remove("visible");
+      }
+
+      async function fetchStockData() {
+        if (activeFetchController) {
+          activeFetchController.abort();
+        }
+
+        const controller = new AbortController();
+        activeFetchController = controller;
+
+        setLoadingState(true);
+        setButtonsDisabled(true);
+        setStatus("Fetching latest data...", "info", { spinner: true });
+
+        try {
+          const response = await fetch("/api/stocks", {
+            signal: controller.signal,
+            headers: {
+              Accept: "application/json",
+            },
+          });
+
+          if (controller !== activeFetchController) {
+            return;
+          }
+
+          let payload;
+
+          if (!response.ok) {
+            try {
+              payload = await response.json();
+            } catch (parseError) {
+              payload = null;
+            }
+
+            const errorMessage =
+              (payload && typeof payload.error === "string" && payload.error.trim()) ||
+              `Request failed with status ${response.status}`;
+
+            const enhancedError = new Error(errorMessage);
+            enhancedError.status = response.status;
+            if (payload && typeof payload === "object") {
+              enhancedError.payload = payload;
+            }
+
+            throw enhancedError;
+          }
+
+          payload = await response.json();
+          const stocks = Array.isArray(payload.stocks) ? payload.stocks : [];
+
+          if (!stocks.length) {
+            throw new Error("No stock data returned.");
+          }
+
+          const normalizedData = stocks
+            .map((item) => ({
+              company: item.company,
+              ticker: item.ticker,
+              currentPrice: Number(item.currentPrice),
+              timestamp: item.timestamp ?? null,
+            }))
+            .filter((item) => Boolean(item.company) && Boolean(item.ticker));
+
+          normalizedData.sort((a, b) => a.company.localeCompare(b.company));
+
+          latestData = normalizedData;
+          latestUpdatedAt = null;
+
+          if (payload.updatedAt) {
+            const parsed = new Date(payload.updatedAt);
+            if (!Number.isNaN(parsed.getTime())) {
+              latestUpdatedAt = parsed.toISOString();
+            }
+          }
+
+          renderTable(latestData);
+          renderTimestamp(latestUpdatedAt);
+
+          if (Array.isArray(payload.errors) && payload.errors.length) {
+            const affected = payload.errors
+              .map((entry) => {
+                if (entry && typeof entry === "object") {
+                  const descriptor = `${entry.company ?? "Unknown"} (${entry.ticker ?? "?"})`;
+                  if (entry.message) {
+                    return `${descriptor}: ${entry.message}`;
+                  }
+                  return descriptor;
+                }
+                return String(entry);
+              })
+              .join("; ");
+            setStatus(`Partial data: issues retrieving ${affected}.`, "warning");
+          } else {
+            setStatus(null);
+          }
+        } catch (error) {
+          if (error.name === "AbortError") {
+            return;
+          }
+
+          console.error("Dashboard fetch error:", error);
+          latestData = [];
+          latestUpdatedAt = null;
+          clearTable();
+          renderTimestamp(null);
+          const message =
+            (error && typeof error.message === "string" && error.message.trim()) ||
+            "Unable to load data. Please try again.";
+          setStatus(message, "error");
+        } finally {
+          if (activeFetchController === controller) {
+            activeFetchController = null;
+            setLoadingState(false);
+            setButtonsDisabled(false);
+          }
 
       let latestData = [];
       let latestUpdatedAt = null;
@@ -303,6 +667,31 @@
       }
 
       function renderTable(data) {
+        const sorted = Array.isArray(data) ? data : [];
+        const prices = sorted
+          .map((item) => item.currentPrice)
+          .filter((value) => Number.isFinite(value));
+
+        const hasPrices = prices.length > 0;
+        const maxPrice = hasPrices ? Math.max(...prices) : null;
+        const minPrice = hasPrices ? Math.min(...prices) : null;
+        const averagePrice = hasPrices
+          ? prices.reduce((acc, value) => acc + value, 0) / prices.length
+          : null;
+
+        const fragment = document.createDocumentFragment();
+
+        sorted.forEach((item) => {
+          const row = document.createElement("tr");
+
+          const companyCell = document.createElement("th");
+          companyCell.scope = "row";
+          companyCell.dataset.label = "Company";
+          companyCell.textContent = item.company;
+          row.appendChild(companyCell);
+
+          const tickerCell = document.createElement("td");
+          tickerCell.dataset.label = "Ticker";
         const prices = data.map((item) => item.currentPrice);
         const maxPrice = Math.max(...prices);
         const minPrice = Math.min(...prices);
@@ -322,6 +711,54 @@
           row.appendChild(tickerCell);
 
           const priceCell = document.createElement("td");
+          priceCell.dataset.label = "Current Price";
+          priceCell.classList.add("price");
+          priceCell.textContent = formatCurrency(item.currentPrice);
+
+          const uniqueRange =
+            Number.isFinite(maxPrice) &&
+            Number.isFinite(minPrice) &&
+            maxPrice !== minPrice;
+
+          if (uniqueRange && item.currentPrice === maxPrice) {
+            priceCell.classList.add("high");
+          }
+
+          if (uniqueRange && item.currentPrice === minPrice) {
+            priceCell.classList.add("low");
+          }
+
+          row.appendChild(priceCell);
+
+          const changeCell = document.createElement("td");
+          changeCell.dataset.label = "Change Indicator";
+          const indicator = document.createElement("span");
+          indicator.className = "change-indicator";
+
+          const indicatorInfo = deriveChangeIndicator(item.currentPrice, {
+            minPrice,
+            maxPrice,
+            averagePrice,
+          });
+
+          indicator.textContent = indicatorInfo.label;
+
+          if (indicatorInfo.tone) {
+            indicator.classList.add(`change-indicator--${indicatorInfo.tone}`);
+          }
+
+          indicator.setAttribute("aria-label", indicatorInfo.ariaLabel);
+          changeCell.appendChild(indicator);
+          row.appendChild(changeCell);
+
+          fragment.appendChild(row);
+        });
+
+        tbodyEl.replaceChildren(fragment);
+
+        if (sorted.length) {
+          tableEl.classList.add("visible");
+        }
           priceCell.classList.add("price");
           priceCell.textContent = formatCurrency(item.currentPrice);
           if (item.currentPrice === maxPrice) {
@@ -346,12 +783,104 @@
       function renderTimestamp(updatedAt) {
         if (!updatedAt) {
           timestampEl.textContent = "";
+          timestampEl.removeAttribute("title");
+          return;
+        }
+
+        const parsed = new Date(updatedAt);
+        if (Number.isNaN(parsed.getTime())) {
+          timestampEl.textContent = "";
+          timestampEl.removeAttribute("title");
           return;
         }
 
         const formatted = new Intl.DateTimeFormat(undefined, {
           dateStyle: "medium",
           timeStyle: "short",
+        }).format(parsed);
+
+        timestampEl.textContent = `Data captured at ${formatted}`;
+        timestampEl.setAttribute("title", parsed.toISOString());
+      }
+
+      function deriveChangeIndicator(price, { minPrice, maxPrice, averagePrice }) {
+        if (!Number.isFinite(price)) {
+          return {
+            label: "Data unavailable",
+            tone: null,
+            ariaLabel: "Price data unavailable",
+          };
+        }
+
+        const uniqueRange =
+          Number.isFinite(minPrice) &&
+          Number.isFinite(maxPrice) &&
+          maxPrice !== minPrice;
+
+        if (uniqueRange && price === maxPrice) {
+          return {
+            label: "Highest performer",
+            tone: "positive",
+            ariaLabel: "Highest performer among tracked stocks",
+          };
+        }
+
+        if (uniqueRange && price === minPrice) {
+          return {
+            label: "Lowest performer",
+            tone: "negative",
+            ariaLabel: "Lowest performer among tracked stocks",
+          };
+        }
+
+        if (Number.isFinite(averagePrice) && averagePrice > 0) {
+          const diff = price - averagePrice;
+          const tolerance = averagePrice * 0.0025; // 0.25% tolerance band
+
+          if (Math.abs(diff) <= tolerance) {
+            return {
+              label: "Tracking with peers",
+              tone: null,
+              ariaLabel: "Price is aligned with peer average",
+            };
+          }
+
+          if (diff > 0) {
+            return {
+              label: `Above avg by ${formatCurrencyDelta(diff)}`,
+              tone: "positive",
+              ariaLabel: `Price above peer average by ${formatCurrency(Math.abs(diff))}`,
+            };
+          }
+
+          return {
+            label: `Below avg by ${formatCurrencyDelta(diff)}`,
+            tone: "negative",
+            ariaLabel: `Price below peer average by ${formatCurrency(Math.abs(diff))}`,
+          };
+        }
+
+        return {
+          label: "Stable performer",
+          tone: null,
+          ariaLabel: "Price in expected range",
+        };
+      }
+
+      function formatCurrency(value) {
+        if (!Number.isFinite(value)) {
+          return "$0.00";
+        }
+        return currencyFormatter.format(value);
+      }
+
+      function formatCurrencyDelta(value) {
+        if (!Number.isFinite(value)) {
+          return "$0.00";
+        }
+        const absolute = Math.abs(value);
+        const formatted = currencyFormatter.format(absolute);
+        return value >= 0 ? `+${formatted}` : `-${formatted}`;
         }).format(new Date(updatedAt));
 
         timestampEl.textContent = `Data captured at ${formatted}`;
@@ -381,6 +910,7 @@
 
       function exportToCsv() {
         if (!latestData.length) {
+          setStatus("No data available to export yet.", "warning", { autoClearMs: 4000 });
           return;
         }
 
@@ -389,6 +919,7 @@
           item.company,
           item.ticker,
           formatCurrency(item.currentPrice),
+          item.timestamp ?? "",
           item.timestamp,
         ]);
 
@@ -399,12 +930,19 @@
         const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
+        const timestampSuffix = latestUpdatedAt
+          ? latestUpdatedAt.replace(/[:.]/g, "-")
+          : Date.now();
+        link.href = url;
+        link.download = `competitive-intelligence-${timestampSuffix}.csv`;
         link.href = url;
         link.download = `competitive-intel-${Date.now()}.csv`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
+
+        setStatus("Data exported to CSV.", "success", { autoClearMs: 4000 });
       }
 
       refreshBtn.addEventListener("click", fetchStockData);
